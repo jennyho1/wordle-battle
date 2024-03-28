@@ -61,49 +61,17 @@ function Key({ val, onKeyPress }) {
 }
 
 class Play extends React.Component {
-	constructor(props) {
-		super(props);
-		this.state = {
-			row: 0,
-			col: 0,
-			letterbox: [
-				['', '', '', '', ''],
-				['', '', '', '', ''],
-				['', '', '', '', ''],
-				['', '', '', '', ''],
-				['', '', '', '', ''],
-				['', '', '', '', ''],
-			]
-		};
-	}
 
 	handleKeyPress = (c) => {
-		const { row, col, letterbox} = this.state;
-		if (c === 'DEL'){
-			if (col > 0){
-				const updatedLetterbox = [...letterbox];
-				updatedLetterbox[row][col-1] = '';
-				this.setState({ letterbox: updatedLetterbox, col: col-1 });
-			}
-		} else if (c === 'ENTER') {
-			if (col === 5){
-				this.setState({ row: row+1, col: 0 });
-			}
-		} else {
-			if (col < 5){
-				const updatedLetterbox = [...letterbox];
-				updatedLetterbox[row][col] = c;
-				this.setState({ letterbox: updatedLetterbox, col: col+1 });
-			}
-		}
-  };
+		this.props.onKeyPress(c);
+	}
 
   render() {
     return (
 		<div className="ui_top" id="ui_play">
 			<center>
 				<table className="letterbox">
-					{this.state.letterbox.map((row, rowIndex) => (
+					{this.props.guiState.letterbox.map((row, rowIndex) => (
 						<tr className={'row'+rowIndex} key={rowIndex}>
 							{row.map((cell, colIndex) => (<td className={'col'+colIndex} key={colIndex}>{cell}</td>))}
 						</tr>
@@ -170,13 +138,13 @@ function Instruction() {
 }
 
 
-function UI({ pagename, username }) {
+function UI({ pagename, username, guiState, keyPress }) {
   if (pagename === "ui_home") {
     return <Home />;
   } else if (pagename === "ui_username") {
     return <Username user={username}/>;
   } else if (pagename === "ui_play") {
-    return <Play />;
+    return <Play guiState={guiState} onKeyPress={keyPress}/>;
   } else if (pagename === "ui_stats") {
     return <Stats />;
   } else if (pagename === "ui_instructions") {
@@ -190,7 +158,19 @@ class Main extends React.Component {
     	super(props);
     	this.state = { 
 				pagename: "ui_username",
-				username: ""
+				username: "",
+				guiState: {
+					row: 0,
+					col: 0,
+					letterbox: [
+						['', '', '', '', ''],
+						['', '', '', '', ''],
+						['', '', '', '', ''],
+						['', '', '', '', ''],
+						['', '', '', '', ''],
+						['', '', '', '', ''],
+					]
+				}
 			}
   }
 
@@ -206,12 +186,33 @@ class Main extends React.Component {
 		this.setState({pagename: name});
 	}
 
+	handleKeyPress = (c) => {
+		const { row, col, letterbox} = this.state.guiState;
+		if (c === 'DEL'){
+			if (col > 0){
+				const updatedLetterbox = [...letterbox];
+				updatedLetterbox[row][col-1] = '';
+				this.setState({ guiState: {...this.state.guiState, letterbox: updatedLetterbox, col: col-1 }});
+			}
+		} else if (c === 'ENTER') {
+			if (col === 5){
+				this.setState({ guiState: {...this.state.guiState, row: row+1, col: 0 }});
+			}
+		} else {
+			if (col < 5){
+				const updatedLetterbox = [...letterbox];
+				updatedLetterbox[row][col] = c;
+				this.setState({ guiState: {...this.state.guiState, letterbox: updatedLetterbox, col: col+1 }});
+			}
+		}
+  };
+
   render() {
     return (
-	<div>
-		<Header switch={this.handleSwitch}/>
-		<UI pagename={this.state.pagename} username={this.state.username}/>
-	</div>
+			<div>
+				<Header switch={this.handleSwitch}/>
+				<UI pagename={this.state.pagename} username={this.state.username} guiState={this.state.guiState} keyPress={this.handleKeyPress}/>
+			</div>
     );
   }
 }
