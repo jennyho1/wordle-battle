@@ -16,7 +16,7 @@ nav {
 
 nav .ui_menu { }
 
-nav .ui_menu:hover { transform: scale(1.2); }
+nav a span:hover { transform: scale(1.2); }
 
 .textblock {
 	border:1px solid white; 
