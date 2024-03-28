@@ -61,7 +61,6 @@ app.get('/api/username/', function (req, res) {
 	console.log(req.cookies);
 	res.status(200);
 	res.json({"username":username});
-	
 });
 
 app.put('/api/username/:username/newgame', function (req, res) {

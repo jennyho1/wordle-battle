@@ -56,40 +56,83 @@ function Username({ user }) {
 }
 
 
-function Key({ val }) {
-  function keyPress() {
-    console.log(val);
-  }
-  return (
-    <td onClick={keyPress}>{val}</td>
-  );
+function Key({ val, onKeyPress }) {
+  return (<td onClick={() => onKeyPress(val)}>{val}</td>);
 }
 
 class Play extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			row: 0,
+			col: 0,
+			letterbox: [
+				['', '', '', '', ''],
+				['', '', '', '', ''],
+				['', '', '', '', ''],
+				['', '', '', '', ''],
+				['', '', '', '', ''],
+				['', '', '', '', ''],
+			]
+		};
+	}
+
+	handleKeyPress = (c) => {
+		const { row, col, letterbox} = this.state;
+		if (c === 'DEL'){
+			if (col > 0){
+				const updatedLetterbox = [...letterbox];
+				updatedLetterbox[row][col-1] = '';
+				this.setState({ letterbox: updatedLetterbox, col: col-1 });
+			}
+		} else if (c === 'ENTER') {
+			if (col === 5){
+				this.setState({ row: row+1, col: 0 });
+			}
+		} else {
+			if (col < 5){
+				const updatedLetterbox = [...letterbox];
+				updatedLetterbox[row][col] = c;
+				this.setState({ letterbox: updatedLetterbox, col: col+1 });
+			}
+		}
+  };
+
   render() {
     return (
 		<div className="ui_top" id="ui_play">
 			<center>
 				<table className="letterbox">
-					<tr className="row0" ><td className="col0">&nbsp;</td><td className="col1">&nbsp;</td><td className="col2">&nbsp;</td><td className="col3">&nbsp;</td><td className="col4">&nbsp;</td></tr>
-					<tr className="row1" ><td className="col0">&nbsp;</td><td className="col1">&nbsp;</td><td className="col2">&nbsp;</td><td className="col3">&nbsp;</td><td className="col4">&nbsp;</td></tr>
-					<tr className="row2" ><td className="col0">&nbsp;</td><td className="col1">&nbsp;</td><td className="col2">&nbsp;</td><td className="col3">&nbsp;</td><td className="col4">&nbsp;</td></tr>
-					<tr className="row3" ><td className="col0">&nbsp;</td><td className="col1">&nbsp;</td><td className="col2">&nbsp;</td><td className="col3">&nbsp;</td><td className="col4">&nbsp;</td></tr>
-					<tr className="row4" ><td className="col0">&nbsp;</td><td className="col1">&nbsp;</td><td className="col2">&nbsp;</td><td className="col3">&nbsp;</td><td className="col4">&nbsp;</td></tr>
-					<tr className="row5" ><td className="col0">&nbsp;</td><td className="col1">&nbsp;</td><td className="col2">&nbsp;</td><td className="col3">&nbsp;</td><td className="col4">&nbsp;</td></tr>
+					{this.state.letterbox.map((row, rowIndex) => (
+						<tr className={'row'+rowIndex} key={rowIndex}>
+							{row.map((cell, colIndex) => (<td className={'col'+colIndex} key={colIndex}>{cell}</td>))}
+						</tr>
+					))}
 				</table>
 			</center>
 			<br/>
 			<br/>
 			<center>
 				<table className="keyboardrow">
-					<tr><Key val={'Q'}/><Key val={'W'}/><Key val={'E'}/><Key val={'R'}/><Key val={'T'}/><Key val={'Y'}/><Key val={'U'}/><Key val={'I'}/><Key val={'O'}/><Key val={'P'}/></tr>
+					<tr>
+						{['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'p'].map((c, index) => (
+							<Key val={c} onKeyPress={this.handleKeyPress} key={index}/>
+						))}
+					</tr>
 				</table>
 				<table className="keyboardrow">
-					<tr><Key val={'A'}/><Key val={'S'}/><Key val={'D'}/><Key val={'F'}/><Key val={'G'}/><Key val={'H'}/><Key val={'J'}/><Key val={'K'}/><Key val={'L'}/></tr>
+					<tr>
+						{['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'].map((c, index) => (
+							<Key val={c} onKeyPress={this.handleKeyPress} key={index}/>
+						))}
+					</tr>
 				</table>
 				<table className="keyboardrow">
-					<tr><Key val={'DEL'}/><Key val={'Z'}/><Key val={'X'}/><Key val={'C'}/><Key val={'V'}/><Key val={'B'}/><Key val={'N'}/><Key val={'M'}/><Key val={'ENTER'}/></tr>
+					<tr>
+						{['DEL', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'ENTER'].map((c, index) => (
+							<Key val={c} onKeyPress={this.handleKeyPress} key={index}/>
+						))}
+					</tr>
 				</table>
 			</center>
 			<br/>
