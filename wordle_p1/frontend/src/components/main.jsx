@@ -60,6 +60,15 @@ class Username extends React.Component {
   }
 }
 
+function Key({ val }) {
+  function keyPress() {
+    console.log(val);
+  }
+  return (
+    <td onClick={keyPress}>{val}</td>
+  );
+}
+
 class Play extends React.Component {
   render() {
     return (
@@ -78,13 +87,13 @@ class Play extends React.Component {
 			<br/>
 			<center>
 				<table className="keyboardrow">
-					<tr><td>Q</td><td>W</td><td>E</td><td>R</td><td>T</td><td>Y</td><td>U</td><td>I</td><td>O</td><td>P</td></tr>
+					<tr><Key val={'Q'}/><Key val={'W'}/><Key val={'E'}/><Key val={'R'}/><Key val={'T'}/><Key val={'Y'}/><Key val={'U'}/><Key val={'I'}/><Key val={'O'}/><Key val={'P'}/></tr>
 				</table>
 				<table className="keyboardrow">
-					<tr><td>A</td><td>S</td><td>D</td><td>F</td><td>G</td><td>H</td><td>J</td><td>K</td><td>L</td></tr>
+					<tr><Key val={'A'}/><Key val={'S'}/><Key val={'D'}/><Key val={'F'}/><Key val={'G'}/><Key val={'H'}/><Key val={'J'}/><Key val={'K'}/><Key val={'L'}/></tr>
 				</table>
 				<table className="keyboardrow">
-					<tr><td>DEL</td><td>Z</td><td>X</td><td>C</td><td>V</td><td>B</td><td>N</td><td>M</td><td>ENTER</td></tr>
+					<tr><Key val={'DEL'}/><Key val={'Z'}/><Key val={'X'}/><Key val={'C'}/><Key val={'V'}/><Key val={'B'}/><Key val={'N'}/><Key val={'M'}/><Key val={'ENTER'}/></tr>
 				</table>
 			</center>
 			<br/>
