@@ -45,6 +45,10 @@ nav a span:hover { transform: scale(1.2); }
 	text-align: center;
 }
 
+a {
+	color: white;
+}
+
 nav.ui_home span.ui_home, 
 nav.ui_username span.ui_username, 
 nav.ui_play span.ui_play, 
