@@ -6,7 +6,7 @@ class Header extends React.Component {
   constructor(props) {
     super(props);
 		this.state = {
-			pagename : "ui_home"
+			pagename : "ui_username"
 		};
   }
 
@@ -35,10 +35,8 @@ class Header extends React.Component {
   }
 }
 
-
-class Home extends React.Component {
-  render() {
-    return (
+function Home() {
+  return (
 		<div className="ui_top" id="ui_home">
 			<div className="textblock"> 
 				Solo
@@ -46,19 +44,17 @@ class Home extends React.Component {
 				Play the classic game against yourself. 
 			</div>
 		</div>
-    );
-  }
+  );
 }
 
-class Username extends React.Component {
-  render() {
-    return (
+function Username({ user }) {
+  return (
 		<div className="ui_top" id="ui_username">
-			<h2>username: <span id="username"></span></h2>
+			<h2>username: <span id="username">{user}</span></h2>
 		</div>
-    );
-  }
+  );
 }
+
 
 function Key({ val }) {
   function keyPress() {
@@ -106,9 +102,9 @@ class Play extends React.Component {
   }
 }
 
-class Stats extends React.Component {
-  render() {
-    return (
+
+function Stats() {
+  return (
 		<div className="ui_top" id="ui_stats">
 			<center style={{'fontSize':'xx-large'}}>
 				<span className="material-symbols-outlined"> check_circle </span> 8 &nbsp;
@@ -116,32 +112,31 @@ class Stats extends React.Component {
 				<span className="material-symbols-outlined"> cancel </span> 2
 			</center>
 		</div>
-    );
-  }
+  );
 }
 
-class Instruction extends React.Component {
-  render() {
-    return (
+
+function Instruction() {
+  return (
 		<div className="ui_top" id="ui_instructions">
 			<div className="textblock"> 
 				Take a look a mordle.io instructions.
 			</div>
 		</div>
-    );
-  }
+  );
 }
 
-function UI({ name }) {
-  if (name === "ui_home") {
+
+function UI({ pagename, username }) {
+  if (pagename === "ui_home") {
     return <Home />;
-  } else if (name === "ui_username") {
-    return <Username />;
-  } else if (name === "ui_play") {
+  } else if (pagename === "ui_username") {
+    return <Username user={username}/>;
+  } else if (pagename === "ui_play") {
     return <Play />;
-  } else if (name === "ui_stats") {
+  } else if (pagename === "ui_stats") {
     return <Stats />;
-  } else if (name === "ui_instructions") {
+  } else if (pagename === "ui_instructions") {
     return <Instruction />;
   } 
 }
@@ -151,9 +146,19 @@ class Main extends React.Component {
   constructor(props) {
     	super(props);
     	this.state = { 
-				pagename: "ui_home"
+				pagename: "ui_username",
+				username: ""
 			}
   }
+
+	componentDidMount() {
+		api_getUsername(this.handleUsername);
+	}
+
+	handleUsername = (data) => {
+		this.setState({username: data.username});
+	}
+
 	handleSwitch = (name) => {
 		this.setState({pagename: name});
 	}
@@ -162,7 +167,7 @@ class Main extends React.Component {
     return (
 	<div>
 		<Header switch={this.handleSwitch}/>
-		<UI name={this.state.pagename}/>
+		<UI pagename={this.state.pagename} username={this.state.username}/>
 	</div>
     );
   }
