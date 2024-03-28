@@ -14,6 +14,8 @@
 const port = 8550; 
 const express = require('express');
 
+const cookieParser = require('cookie-parser');
+
 const app = express();
 const fs = require('fs');
 const Wordle = require("./model.js");
@@ -35,6 +37,7 @@ fs.readFile('./words.5', 'utf8', (err, data) => {
 /******************************************************************************
  * middleware
  ******************************************************************************/
+app.use(cookieParser());
 app.use(express.json()); // support json encoded bodies
 app.use(express.urlencoded({ extended: true })); // support encoded bodies
 
@@ -45,10 +48,20 @@ app.use(express.urlencoded({ extended: true })); // support encoded bodies
  * routes
  ******************************************************************************/
 app.get('/api/username/', function (req, res) {
-	let wordle=new Wordle(words);
-	username=wordle.getUsername();
+  let username = '';
+
+	if (req.cookies.username){
+		username = req.cookies.username;
+	} else {
+		let wordle=new Wordle(words);
+		username=wordle.getUsername();
+		let time = 120*60*1000;
+		res.cookie('username', username, { maxAge: time });
+	}
+	console.log(req.cookies);
 	res.status(200);
 	res.json({"username":username});
+	
 });
 
 app.put('/api/username/:username/newgame', function (req, res) {
