@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/anchor-is-valid */
 import React from 'react';
 import { api_getUsername, api_guess, api_newgame }  from './api'; 
 
@@ -5,19 +6,24 @@ class Header extends React.Component {
   constructor(props) {
     super(props);
   }
+
+	handleClick = (e) => {
+		this.props.switch(e.currentTarget.id)
+	}
+	
   render() {
     return (
 		<header>
 			<nav>
 				<span className="alignleft"></span>
 				<span className="aligncenter">
-					<a className="ui_home" style={{'fontSize':'x-large', 'textDecoration':'underline'}}>309DLE</a>
+					<a id={"ui_home"} onClick={this.handleClick} style={{'fontSize':'x-large', 'textDecoration':'underline'}}>309DLE</a>
 				</span>
 				<span className="alignright">
-					<a className="ui_username"><span className="material-symbols-outlined"> person </span></a>
-					<a className="ui_play"><span className="material-symbols-outlined"> play_circle </span></a>
-					<a className="ui_stats"><span className="material-symbols-outlined"> leaderboard </span></a>
-					<a className="ui_instructions"><span className="material-symbols-outlined"> help </span></a>
+					<a id={"ui_username"} onClick={this.handleClick}><span className="material-symbols-outlined"> person </span></a>
+					<a id={"ui_play"} onClick={this.handleClick}><span className="material-symbols-outlined"> play_circle </span></a>
+					<a id={"ui_stats"} onClick={this.handleClick}><span className="material-symbols-outlined"> leaderboard </span></a>
+					<a id={"ui_instructions"} onClick={this.handleClick}><span className="material-symbols-outlined"> help </span></a>
 				</span>
 			</nav>
 		</header>
@@ -25,15 +31,10 @@ class Header extends React.Component {
   }
 }
 
-class Main extends React.Component {
-  constructor(props) {
-    	super(props);
-    	this.state = { }
-  }
+
+class Home extends React.Component {
   render() {
     return (
-	<div>
-		<Header />
 		<div className="ui_top" id="ui_home">
 			<div className="textblock"> 
 				Solo
@@ -41,9 +42,23 @@ class Main extends React.Component {
 				Play the classic game against yourself. 
 			</div>
 		</div>
+    );
+  }
+}
+
+class Username extends React.Component {
+  render() {
+    return (
 		<div className="ui_top" id="ui_username">
 			<h2>username: <span id="username"></span></h2>
 		</div>
+    );
+  }
+}
+
+class Play extends React.Component {
+  render() {
+    return (
 		<div className="ui_top" id="ui_play">
 			<center>
 				<table className="letterbox">
@@ -74,6 +89,13 @@ class Main extends React.Component {
 				<button id="play_newgame_button" style={{'background':'red'}} onclick="gui_newgame();">NEW GAME</button>
 			</center>
 		</div>
+    );
+  }
+}
+
+class Stats extends React.Component {
+  render() {
+    return (
 		<div className="ui_top" id="ui_stats">
 			<center style={{'fontSize':'xx-large'}}>
 				<span className="material-symbols-outlined"> check_circle </span> 8 &nbsp;
@@ -81,11 +103,53 @@ class Main extends React.Component {
 				<span className="material-symbols-outlined"> cancel </span> 2
 			</center>
 		</div>
+    );
+  }
+}
+
+class Instruction extends React.Component {
+  render() {
+    return (
 		<div className="ui_top" id="ui_instructions">
 			<div className="textblock"> 
 				Take a look a mordle.io instructions.
 			</div>
 		</div>
+    );
+  }
+}
+
+function UI({ name }) {
+  if (name === "ui_home") {
+    return <Home />;
+  } else if (name === "ui_username") {
+    return <Username />;
+  } else if (name === "ui_play") {
+    return <Play />;
+  } else if (name === "ui_stats") {
+    return <Stats />;
+  } else if (name === "ui_instructions") {
+    return <Instruction />;
+  } 
+}
+
+
+class Main extends React.Component {
+  constructor(props) {
+    	super(props);
+    	this.state = { 
+				pagename: "ui_home"
+			}
+  }
+	handleSwitch = (name) => {
+		this.setState({pagename: name});
+	}
+
+  render() {
+    return (
+	<div>
+		<Header switch={this.handleSwitch}/>
+		<UI name={this.state.pagename}/>
 	</div>
     );
   }
