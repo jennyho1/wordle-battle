@@ -8,6 +8,8 @@ header { font-weight: bold; border-bottom:1px solid grey; padding-top:5ex; paddi
 nav {
 	display: flex;
 	width: 100%;
+	cursor:default;
+	user-select: none;
 }
 
 .alignleft { width:33.33333%; text-align:left; }

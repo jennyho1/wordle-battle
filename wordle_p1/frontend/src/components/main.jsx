@@ -41,7 +41,9 @@ class Main extends React.Component {
 		this.state = { 
 			pagename: "ui_username",
 			username: "",
-			guiState: getInitialGameState()
+			guiState: getInitialGameState(),
+			wins: 0,
+			losses: 0
 		};
 		this.playRef = React.createRef();
 		this.modalRef = React.createRef();
@@ -91,7 +93,9 @@ class Main extends React.Component {
 			this.updateBoard(data.score);
 			if (data.state === 'won' || data.state === 'lost') {
 				this.modalRef.current.showModal(data.state, data.target);
-				this.setState({guiState: {...this.state.guiState, enable: false}})
+				let wins = data.state === 'won' ? this.state.wins + 1 : this.state.wins;
+				let losses = data.state === 'lost' ? this.state.losses + 1 : this.state.losses;
+				this.setState({guiState: {...this.state.guiState, enable: false}, wins: wins, losses: losses});
 			}
 		} else {
 			toast.error(data.error, {
@@ -130,7 +134,7 @@ class Main extends React.Component {
 		} else if (this.state.pagename === "ui_play") {
 			return <Play guiState={this.state.guiState} onKeyPress={this.handleKeyPress} createNewGame={this.createNewGame} ref={this.playRef}/>;
 		} else if (this.state.pagename === "ui_stats") {
-			return <Stats />;
+			return <Stats wins={this.state.wins} players={1} losses={this.state.losses}/>;
 		} else if (this.state.pagename === "ui_instructions") {
 			return <Instructions />;
 		} 
