@@ -58,7 +58,6 @@ app.get('/api/username/', function (req, res) {
 		let time = 120*60*1000;
 		res.cookie('username', username, { maxAge: time });
 	}
-	console.log(req.cookies);
 	res.status(200);
 	res.json({"username":username});
 });

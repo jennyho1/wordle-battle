@@ -2,6 +2,8 @@
 import React from 'react';
 import { api_getUsername, api_guess, api_newgame }  from './api'; 
 
+const colors = ['#000000', '#4b4b4b', '#fdb731', '#00dc00'];
+
 class Header extends React.Component {
   constructor(props) {
     super(props);
@@ -56,16 +58,49 @@ function Username({ user }) {
 }
 
 
-function Key({ val, onKeyPress }) {
-  return (<td onClick={() => onKeyPress(val)}>{val}</td>);
+function Key({ val, onKeyPress, color }) {
+  return (<td onClick={() => onKeyPress(val)} style={{background:color}}>{val}</td>);
 }
 
 class Play extends React.Component {
+	constructor(props) {
+    super(props);
+		this.state = {
+			alphabetMap : {"Q":0,"W":0,"E":0,"R":0,"T":0,"Y":0,"U":0,"I":0,"O":0,"P":0,"A":0,"S":0,"D":0,"F":0,"G":0,"H":0,"J":0,"K":0,"L":0,"Z":0,"X":0,"C":0,"V":0,"B":0,"N":0,"M":0,},
+			boardColors: [
+				[0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0],
+			],
+		};
+  }
 
 	handleKeyPress = (c) => {
 		if (this.props.guiState.enable){
 			this.props.onKeyPress(c);
 		}
+	}
+
+	highlightBoard = (row, score) => {
+		const alphabetMap = {...this.state.alphabetMap};
+		const boardColors = [...this.state.boardColors];
+
+		for (let i=0; i<score.length; i++){
+			var s = score[i].score;
+			var c = score[i].char;
+	
+			// updating game board
+			boardColors[row][i] = s;
+	
+			// updating keyboard if new score is better than current score
+			if (s > alphabetMap[c]){
+				alphabetMap[c] = s;
+			}
+		}
+		this.setState({alphabetMap: alphabetMap})
 	}
 
   render() {
@@ -76,7 +111,9 @@ class Play extends React.Component {
 					<tbody>
 						{this.props.guiState.letterbox.map((row, rowIndex) => (
 							<tr className={'row'+rowIndex} key={rowIndex}>
-								{row.map((cell, colIndex) => (<td className={'col'+colIndex} key={colIndex}>{cell}</td>))}
+								{row.map((cell, colIndex) => (
+									<td className={'col'+colIndex} key={colIndex} style={{background: colors[this.state.boardColors[rowIndex][colIndex]]}}>{cell}</td>
+								))}
 							</tr>
 						))}
 					</tbody>
@@ -89,7 +126,7 @@ class Play extends React.Component {
 					<tbody>
 						<tr>
 							{['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'].map((c, index) => (
-								<Key val={c} onKeyPress={this.handleKeyPress} key={index}/>
+								<Key val={c} onKeyPress={this.handleKeyPress} key={index} color={colors[this.state.alphabetMap[c]]}/>
 							))}
 						</tr>
 					</tbody>
@@ -98,7 +135,7 @@ class Play extends React.Component {
 					<tbody>
 						<tr>
 							{['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'].map((c, index) => (
-								<Key val={c} onKeyPress={this.handleKeyPress} key={index}/>
+								<Key val={c} onKeyPress={this.handleKeyPress} key={index} color={colors[this.state.alphabetMap[c]]}/>
 							))}
 						</tr>
 					</tbody>
@@ -107,7 +144,7 @@ class Play extends React.Component {
 					<tbody>
 						<tr>
 							{['DEL', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'ENTER'].map((c, index) => (
-								<Key val={c} onKeyPress={this.handleKeyPress} key={index}/>
+								<Key val={c} onKeyPress={this.handleKeyPress} key={index} color={colors[this.state.alphabetMap[c]]}/>
 							))}
 						</tr>
 					</tbody>
@@ -148,26 +185,28 @@ function Instruction() {
 }
 
 
+
 class Main extends React.Component {
   constructor(props) {
-    	super(props);
-    	this.state = { 
-				pagename: "ui_username",
-				username: "",
-				guiState: {
-					row: 0,
-					col: 0,
-					letterbox: [
-						['', '', '', '', ''],
-						['', '', '', '', ''],
-						['', '', '', '', ''],
-						['', '', '', '', ''],
-						['', '', '', '', ''],
-						['', '', '', '', ''],
-					],
-					enable: false
-				}
+		super(props);
+		this.state = { 
+			pagename: "ui_username",
+			username: "",
+			guiState: {
+				row: 0,
+				col: 0,
+				letterbox: [
+					['', '', '', '', ''],
+					['', '', '', '', ''],
+					['', '', '', '', ''],
+					['', '', '', '', ''],
+					['', '', '', '', ''],
+					['', '', '', '', ''],
+				],
+				enable: false
 			}
+		};
+		this.playRef = React.createRef();
   }
 
 	componentDidMount() {
@@ -215,7 +254,12 @@ class Main extends React.Component {
 	handleMakeGuess = (data) => {
 		console.log(data);
 		if (data.success){
+			// highlight the letterbox
+			this.playRef.current.highlightBoard(this.state.guiState.row, data.score);
+
 			this.setState({ guiState: {...this.state.guiState, row: this.state.guiState.row+1, col: 0 }});
+		} else {
+			console.log(data.error);
 		}
 	}
 
@@ -225,7 +269,7 @@ class Main extends React.Component {
 		} else if (this.state.pagename === "ui_username") {
 			return <Username user={this.state.username}/>;
 		} else if (this.state.pagename === "ui_play") {
-			return <Play guiState={this.state.guiState} onKeyPress={this.handleKeyPress} createNewGame={this.createNewGame}/>;
+			return <Play guiState={this.state.guiState} onKeyPress={this.handleKeyPress} createNewGame={this.createNewGame} ref={this.playRef}/>;
 		} else if (this.state.pagename === "ui_stats") {
 			return <Stats />;
 		} else if (this.state.pagename === "ui_instructions") {
