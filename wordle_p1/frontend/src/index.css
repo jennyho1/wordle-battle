@@ -14,8 +14,6 @@ nav {
 .aligncenter { width:33.33333%; text-align:center; }
 .alignright { width:33.33333%; text-align:right; }
 
-nav .ui_menu { }
-
 nav a span:hover { transform: scale(1.2); }
 
 .textblock {
@@ -30,14 +28,18 @@ nav a span:hover { transform: scale(1.2); }
 	border:1px solid grey;
 	width:3ex;
 	height:3ex;
+	font-size: 28px;
+	font-weight: bold;
 }
 
 
 .keyboardrow td {
 	text-align: center;
 	border:1px solid grey;
-	width:3ex;
-	height:3ex;
+	width:4ex;
+	height:4ex;
+	cursor:default;
+	user-select: none;
 }
 
 
@@ -89,4 +91,15 @@ nav.ui_instructions span.ui_instructions {
 .close:hover{
   text-decoration: none;
   cursor: pointer;
+}
+
+/* ------------------------CSS------------------------ */
+
+.howtoplay {
+	background-color:#333058;
+	padding: 2px;
+}
+
+.ui_top {
+	padding-top: 15px;
 }
