@@ -83,25 +83,25 @@ module.exports = class Wordle {
 	makeGuess(guess){
 		var result={ "error":"", "success":true };
 		if(guess.length!=5){
-			result["error"]="guess must be 5 alphabetic characters";
+			result["error"]="Guess must be 5 alphabetic characters";
 			result["success"]=false;
 			return result;
 		}
 	
 		if(!this.words.includes(guess)){
-			result["error"]="guess must be a word";
+			result["error"]="Guess must be a word";
 			result["success"]=false;
 			return result;
 		}
 	
 		if(this.state!="play"){
-			result["error"]="no guesses allowed for this game";
+			result["error"]="No guesses allowed for this game";
 			result["success"]=false;
 			return result;
 		}
 	
 		if(this.guesses.length>5){
-			result["error"]="no more guesses allowed for this game";
+			result["error"]="No more guesses allowed for this game";
 			result["success"]=false;
 			return result;
 		}
@@ -114,9 +114,11 @@ module.exports = class Wordle {
 		if(target==guess){
 			this.won+=1;
 			this.state="won";
+			result["target"]=target;
 		} else if(this.guesses.length==6){
 			this.lost+=1;
 			this.state="lost";
+			result["target"]=target;
 		}
 		result["state"]=this.state;
 		result["guess"]=guess;
