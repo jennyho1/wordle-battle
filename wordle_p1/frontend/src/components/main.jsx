@@ -63,7 +63,9 @@ function Key({ val, onKeyPress }) {
 class Play extends React.Component {
 
 	handleKeyPress = (c) => {
-		this.props.onKeyPress(c);
+		if (this.props.guiState.enable){
+			this.props.onKeyPress(c);
+		}
 	}
 
   render() {
@@ -71,42 +73,50 @@ class Play extends React.Component {
 		<div className="ui_top" id="ui_play">
 			<center>
 				<table className="letterbox">
-					{this.props.guiState.letterbox.map((row, rowIndex) => (
-						<tr className={'row'+rowIndex} key={rowIndex}>
-							{row.map((cell, colIndex) => (<td className={'col'+colIndex} key={colIndex}>{cell}</td>))}
+					<tbody>
+						{this.props.guiState.letterbox.map((row, rowIndex) => (
+							<tr className={'row'+rowIndex} key={rowIndex}>
+								{row.map((cell, colIndex) => (<td className={'col'+colIndex} key={colIndex}>{cell}</td>))}
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</center>
+			<br/>
+			<br/>
+			<center>
+				<table className="keyboardrow">
+					<tbody>
+						<tr>
+							{['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'].map((c, index) => (
+								<Key val={c} onKeyPress={this.handleKeyPress} key={index}/>
+							))}
 						</tr>
-					))}
+					</tbody>
+				</table>
+				<table className="keyboardrow">
+					<tbody>
+						<tr>
+							{['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'].map((c, index) => (
+								<Key val={c} onKeyPress={this.handleKeyPress} key={index}/>
+							))}
+						</tr>
+					</tbody>
+				</table>
+				<table className="keyboardrow">
+					<tbody>
+						<tr>
+							{['DEL', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'ENTER'].map((c, index) => (
+								<Key val={c} onKeyPress={this.handleKeyPress} key={index}/>
+							))}
+						</tr>
+					</tbody>
 				</table>
 			</center>
 			<br/>
 			<br/>
 			<center>
-				<table className="keyboardrow">
-					<tr>
-						{['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'p'].map((c, index) => (
-							<Key val={c} onKeyPress={this.handleKeyPress} key={index}/>
-						))}
-					</tr>
-				</table>
-				<table className="keyboardrow">
-					<tr>
-						{['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'].map((c, index) => (
-							<Key val={c} onKeyPress={this.handleKeyPress} key={index}/>
-						))}
-					</tr>
-				</table>
-				<table className="keyboardrow">
-					<tr>
-						{['DEL', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'ENTER'].map((c, index) => (
-							<Key val={c} onKeyPress={this.handleKeyPress} key={index}/>
-						))}
-					</tr>
-				</table>
-			</center>
-			<br/>
-			<br/>
-			<center>
-				<button id="play_newgame_button" style={{'background':'red'}} onclick="gui_newgame();">NEW GAME</button>
+				{!this.props.guiState.enable ? <button id="play_newgame_button" style={{'background':'red'}} onClick={this.props.createNewGame}>NEW GAME</button>: null }
 			</center>
 		</div>
     );
@@ -138,21 +148,6 @@ function Instruction() {
 }
 
 
-function UI({ pagename, username, guiState, keyPress }) {
-  if (pagename === "ui_home") {
-    return <Home />;
-  } else if (pagename === "ui_username") {
-    return <Username user={username}/>;
-  } else if (pagename === "ui_play") {
-    return <Play guiState={guiState} onKeyPress={keyPress}/>;
-  } else if (pagename === "ui_stats") {
-    return <Stats />;
-  } else if (pagename === "ui_instructions") {
-    return <Instruction />;
-  } 
-}
-
-
 class Main extends React.Component {
   constructor(props) {
     	super(props);
@@ -169,7 +164,8 @@ class Main extends React.Component {
 						['', '', '', '', ''],
 						['', '', '', '', ''],
 						['', '', '', '', ''],
-					]
+					],
+					enable: false
 				}
 			}
   }
@@ -184,6 +180,14 @@ class Main extends React.Component {
 
 	handleSwitch = (name) => {
 		this.setState({pagename: name});
+	}
+
+	createNewGame = () => {
+		api_newgame(this.state.username, this.enableGame)
+	}
+
+	enableGame = () => {
+		this.setState({guiState: {...this.state.guiState, enable: true}})
 	}
 
 	handleKeyPress = (c) => {
@@ -207,11 +211,25 @@ class Main extends React.Component {
 		}
   };
 
+	renderUIComponent() {
+		if (this.state.pagename === "ui_home") {
+			return <Home />;
+		} else if (this.state.pagename === "ui_username") {
+			return <Username user={this.state.username}/>;
+		} else if (this.state.pagename === "ui_play") {
+			return <Play guiState={this.state.guiState} onKeyPress={this.handleKeyPress} createNewGame={this.createNewGame}/>;
+		} else if (this.state.pagename === "ui_stats") {
+			return <Stats />;
+		} else if (this.state.pagename === "ui_instructions") {
+			return <Instruction />;
+		} 
+ }
+
   render() {
     return (
 			<div>
 				<Header switch={this.handleSwitch}/>
-				<UI pagename={this.state.pagename} username={this.state.username} guiState={this.state.guiState} keyPress={this.handleKeyPress}/>
+				{ this.renderUIComponent()}
 			</div>
     );
   }

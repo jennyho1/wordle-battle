@@ -28,6 +28,20 @@ function api_guess(username, guess, cb){
 
 function api_newgame(username, cb){
 	let url="/api/username/"+username+"/newgame";
+	fetch(url, {
+		method: "PUT", 
+		mode: "same-origin", 
+		cache: "no-cache", 
+		credentials: "same-origin", 
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded',
+		},
+		redirect: "follow", 
+		referrerPolicy: "no-referrer"
+	})
+	.then(response=>response.json())
+	.then(data=>cb(data))
+	.catch(error=>console.log(error));
 }
 
 export { api_getUsername, api_guess, api_newgame };
