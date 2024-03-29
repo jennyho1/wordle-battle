@@ -200,7 +200,8 @@ class Main extends React.Component {
 			}
 		} else if (c === 'ENTER') {
 			if (col === 5){
-				this.setState({ guiState: {...this.state.guiState, row: row+1, col: 0 }});
+				let guess = letterbox[row].join('');
+				api_guess(this.state.username, guess, this.handleMakeGuess)
 			}
 		} else {
 			if (col < 5){
@@ -210,6 +211,13 @@ class Main extends React.Component {
 			}
 		}
   };
+
+	handleMakeGuess = (data) => {
+		console.log(data);
+		if (data.success){
+			this.setState({ guiState: {...this.state.guiState, row: this.state.guiState.row+1, col: 0 }});
+		}
+	}
 
 	renderUIComponent() {
 		if (this.state.pagename === "ui_home") {
