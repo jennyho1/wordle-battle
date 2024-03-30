@@ -45,6 +45,10 @@ module.exports = class Wordle {
 		this.username=username;
 	}
 
+	setTarget(target){
+		this.target=target;
+	}
+
 	getUsername(){ return this.username; }
 
 	getState(){ return this.state; }

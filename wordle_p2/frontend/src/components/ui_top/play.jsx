@@ -1,4 +1,5 @@
 import React from 'react';
+import { GameState } from './gameState'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -19,6 +20,10 @@ class Play extends React.Component {
   render() {
     return (
 		<div className="ui_top" id="ui_play">
+			<center>
+				{/* <GameState wins={1} players={1} losses={1} timeLeft={299}/> */}
+				<GameState state={this.props.gameState} enable={this.props.guiState.enable}/>
+			</center>
 			<center>
 				<table className="letterbox">
 					<tbody>

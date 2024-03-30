@@ -105,3 +105,12 @@ nav.ui_instructions span.ui_instructions {
 .ui_top {
 	padding-top: 15px;
 }
+
+.clickable {
+	transition: background-color 0.2s;
+	cursor: pointer;
+}
+
+.clickable:hover {
+	background-color: rgb(38, 38, 38);
+}

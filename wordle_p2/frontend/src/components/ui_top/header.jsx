@@ -2,22 +2,15 @@
 import React from 'react';
 
 class Header extends React.Component {
-  constructor(props) {
-    super(props);
-		this.state = {
-			pagename : "ui_username"
-		};
-  }
 
 	handleClick = (e) => {
-		this.setState({pagename: e.currentTarget.id});
 		this.props.switchPage(e.currentTarget.id);
 	}
 	
   render() {
     return (
 		<header>
-			<nav className={this.state.pagename}>
+			<nav className={this.props.pagename}>
 				<span className="alignleft"></span>
 				<span className="aligncenter">
 					<a id={"ui_home"} onClick={this.handleClick}><span className="ui_home" style={{'fontSize':'x-large', 'textDecoration':'underline'}}>309DLE</span></a>

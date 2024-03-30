@@ -35,6 +35,8 @@ const getInitialGameState = () => {
 	}
 }
 
+const socket = new WebSocket(`ws://${window.location.hostname}:8552`);
+
 class Main extends React.Component {
   constructor(props) {
 		super(props);
@@ -43,7 +45,8 @@ class Main extends React.Component {
 			username: "",
 			guiState: getInitialGameState(),
 			wins: 0,
-			losses: 0
+			losses: 0,
+			gameState: {won:0, lost:0, stillPlaying:0, timeRemaining:0}
 		};
 		this.playRef = React.createRef();
 		this.modalRef = React.createRef();
@@ -52,17 +55,37 @@ class Main extends React.Component {
 	componentDidMount() {
 		// get username once on load
 		api_getUsername((data) => {
-			this.setState({username: data.username});
+			let username = data.username;
+			this.setState({username: username});
 		});
+
+		// on web socket connection, send username to server
+		socket.addEventListener("open", event => {
+			console.log('WebSocket connection established');
+			
+		});
+		// on receiving message from server, update gameState
+		socket.addEventListener("message", event => {
+			let data = JSON.parse(event.data);
+			// console.log("Message from server ", data)
+			console.log("Players: ", data.players)
+			this.setState({gameState: data});
+		});
+	
 	}
+
 
 	handleSwitchPage = (name) => {
 		this.setState({pagename: name});
 	}
 
 	createNewGame = () => {
-		api_newgame(this.state.username, () => {
-			this.setState({guiState: {...getInitialGameState(), enable: true}})
+		api_newgame(this.state.username, (data) => {
+			let gameState = JSON.parse(data.gameState);
+			this.setState({guiState: {...getInitialGameState(), enable: true}, gameState: gameState})
+			if (socket && socket.readyState === WebSocket.OPEN){
+				socket.send(this.state.username);
+			}
 		})
 	}
 
@@ -128,11 +151,19 @@ class Main extends React.Component {
 
 	renderUIComponent() {
 		if (this.state.pagename === "ui_home") {
-			return <Home />;
+			return <Home switchPage={this.handleSwitchPage}/>;
 		} else if (this.state.pagename === "ui_username") {
 			return <Username user={this.state.username}/>;
 		} else if (this.state.pagename === "ui_play") {
-			return <Play guiState={this.state.guiState} onKeyPress={this.handleKeyPress} createNewGame={this.createNewGame} ref={this.playRef}/>;
+			return (
+				<Play 
+					guiState={this.state.guiState} 
+					gameState={this.state.gameState}
+					onKeyPress={this.handleKeyPress} 
+					createNewGame={this.createNewGame} 
+					ref={this.playRef}
+				/>
+			);
 		} else if (this.state.pagename === "ui_stats") {
 			return <Stats wins={this.state.wins} players={1} losses={this.state.losses}/>;
 		} else if (this.state.pagename === "ui_instructions") {
@@ -143,7 +174,7 @@ class Main extends React.Component {
   render() {
     return (
 			<div>
-				<Header switchPage={this.handleSwitchPage}/>
+				<Header switchPage={this.handleSwitchPage} pagename={this.state.pagename}/>
 				{ this.renderUIComponent()}
 				<Modal ref={this.modalRef}/>
 			</div>

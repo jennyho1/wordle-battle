@@ -12,7 +12,9 @@
  **/
 
 const port = 8550; 
+const webSocketPort = 8550+2;
 const express = require('express');
+const { WebSocketServer, WebSocket } = require('ws');
 
 const cookieParser = require('cookie-parser');
 
@@ -23,6 +25,19 @@ const Wordle = require("./model.js");
 const database = {};
 var words = ["words"]; // just in case!!
 
+const gameState = {
+	wordle: null,
+	target: "",
+	endTime: null,
+	timeout: null,
+	won: 0,
+	lost: 0,
+	stillPlaying: 0,
+	players: []
+};
+
+const duration = 1000*60*5;  // 5 minutes
+
 /******************************************************************************
  * word routines
  ******************************************************************************/
@@ -30,8 +45,8 @@ var words = ["words"]; // just in case!!
 // Read in all words, lets hope this finished before we need the words!
 // https://www.memberstack.com/blog/reading-files-in-node-js
 fs.readFile('./words.5', 'utf8', (err, data) => {
-        if (err)console.error(err);
-        else words = data.split("\n");
+	if (err)console.error(err);
+	else words = data.split("\n");
 });
 
 /******************************************************************************
@@ -43,6 +58,9 @@ app.use(express.urlencoded({ extended: true })); // support encoded bodies
 
 // https://expressjs.com/en/starter/static-files.html
 // app.use(express.static('static-content')); 
+
+// web sockets
+const wss = new WebSocketServer({ port: webSocketPort });
 
 /******************************************************************************
  * routes
@@ -72,8 +90,14 @@ app.put('/api/username/:username/newgame', function (req, res) {
 	} 
 	database[username].reset();
 
+	// --- multiplayer logic ---
+	database[username].setTarget(gameState.target);
+	gameState.stillPlaying++;
+	// broadcastGameState();
+	// -------------------------
+
 	res.status(200);
-	res.json({"status":"created"});
+	res.json({"status":"created", "gameState": getGameState()});
 });
 
 // Add another guess against the current secret word
@@ -87,11 +111,95 @@ app.post('/api/username/:username/guess/:guess', function (req, res) {
 		return;
 	}
 	var data = database[username].makeGuess(guess);
+
+	// --- multiplayer logic ---
+	if (data.state == "won") {
+		gameState.won++;
+		gameState.stillPlaying--;
+	} else if (data.state == "won"){
+		gameState.lost++;
+		gameState.stillPlaying--;
+	}
+	broadcastGameState();
+	// -------------------------
+
 	res.status(200);
 	res.json(data);
 });
 
 app.listen(port, function () {
-  	console.log('Example app listening on port '+port);
+  	console.log('Wordle app listening on port '+port);
 });
 
+
+/******************************************************************************
+ * Web Socket Server
+ ******************************************************************************/
+
+function getGameState(){
+	let message = JSON.stringify({
+		won: gameState.won,
+		lost: gameState.lost,
+		stillPlaying: gameState.stillPlaying,
+		endTime: gameState.endTime,
+		players: gameState.players
+	});
+	return message;
+}
+
+function broadcastGameState(){
+	let message = getGameState();
+	wss.clients.forEach(function each(client) {	
+		if (client.readyState === WebSocket.OPEN) {
+			client.send(message);
+		}
+	});
+}
+
+
+wss.on('connection', function(connection) {
+
+	console.log(`A player has connected.`);
+
+	// a single game is created once the first client connection is established
+	// and restarts every 5 minutes
+	if (gameState.wordle == null){
+		gameState.wordle = new Wordle(words);
+		startNewGame();
+	}
+
+	connection.on('message', function(data) {
+		const username = data.toString();
+		console.log("Player joined: ", username);
+		connection.username = username;
+		gameState.players.push(username);
+		broadcastGameState();
+		// TODO: handle case where the user joins a game that it already joined
+	});
+
+	connection.on('close', function() {
+		console.log('A player has disconnected.');
+		// TODO: update game state if the player was playing
+	});
+
+});
+
+wss.on('close', function(code, data) {
+  console.log('web socket server disconnected: ' + data.toString());
+});
+
+
+/******************************************************************************
+ * wordle game routines
+ ******************************************************************************/
+
+function startNewGame() {
+	gameState.target = gameState.wordle.getRandomWord();
+	gameState.timeout = setTimeout(startNewGame, duration);
+	gameState.endTime = Date.now() + duration;
+	gameState.won = 0;
+	gameState.lost = 0;
+	gameState.stillPlaying = 0;
+	gameState.players = [];
+	console.log("New word: ", gameState.target);
+}
