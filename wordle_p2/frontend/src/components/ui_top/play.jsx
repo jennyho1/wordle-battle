@@ -1,5 +1,5 @@
 import React from 'react';
-import { GameState } from './gameState'
+import { GameState, AllPlayers } from './gameState'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -21,8 +21,7 @@ class Play extends React.Component {
     return (
 		<div className="ui_top" id="ui_play">
 			<center>
-				{/* <GameState wins={1} players={1} losses={1} timeLeft={299}/> */}
-				<GameState state={this.props.gameState} enable={this.props.guiState.enable}/>
+				<GameState state={this.props.gameState} show={this.props.guiState.show} enable={this.props.guiState.enable}/>
 			</center>
 			<center>
 				<table className="letterbox">
@@ -73,7 +72,13 @@ class Play extends React.Component {
 			<center>
 				{!this.props.guiState.enable ? <button id="play_newgame_button" style={{'background':'red'}} onClick={this.props.createNewGame}>NEW GAME</button>: null }
 			</center>
+			<AllPlayers state={this.props.gameState} show={this.props.guiState.show} username={this.props.username}/>
 			<ToastContainer />
+			<br/>
+			<br/>
+			<br/>
+			<br/>
+			<hr></hr>
 		</div>
     );
   }

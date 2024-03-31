@@ -15,6 +15,7 @@ import { Modal } from './ui_utils/modal'
 const getInitialGameState = () => { 
 	return {
 		enable: false,
+		show: false,
 		row: 0,
 		col: 0,
 		letterbox: [
@@ -46,7 +47,7 @@ class Main extends React.Component {
 			guiState: getInitialGameState(),
 			wins: 0,
 			losses: 0,
-			gameState: {won:0, lost:0, stillPlaying:0, timeRemaining:0}
+			gameState: {won:0, lost:0, stillPlaying:0, endTime:0, players:[]}
 		};
 		this.playRef = React.createRef();
 		this.modalRef = React.createRef();
@@ -82,7 +83,7 @@ class Main extends React.Component {
 	createNewGame = () => {
 		api_newgame(this.state.username, (data) => {
 			let gameState = JSON.parse(data.gameState);
-			this.setState({guiState: {...getInitialGameState(), enable: true}, gameState: gameState})
+			this.setState({guiState: {...getInitialGameState(), enable: true, show:true}, gameState: gameState})
 			if (socket && socket.readyState === WebSocket.OPEN){
 				socket.send(this.state.username);
 			}
@@ -161,6 +162,7 @@ class Main extends React.Component {
 					gameState={this.state.gameState}
 					onKeyPress={this.handleKeyPress} 
 					createNewGame={this.createNewGame} 
+					username={this.state.username}
 					ref={this.playRef}
 				/>
 			);

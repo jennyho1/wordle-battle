@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import React from 'react';
 
 
-const useCountdown = (targetDate) => {
-  const countDownDate = new Date(targetDate).getTime();
+const useCountdown = (endDate, enable) => {
+  const countDownDate = new Date(endDate).getTime();
 
   const [countDown, setCountDown] = useState(
     countDownDate - new Date().getTime()
@@ -11,11 +11,13 @@ const useCountdown = (targetDate) => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCountDown(countDownDate - new Date().getTime());
+			if (enable){
+				setCountDown(countDownDate - new Date().getTime());
+			}
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [countDownDate]);
+  }, [countDownDate, enable]);
 
 	const minutes = Math.floor((countDown % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((countDown % (1000 * 60)) / 1000);
@@ -23,8 +25,8 @@ const useCountdown = (targetDate) => {
 };
 
 
-const CountdownTimer = ({ targetDate }) => {
-  const [minutes, seconds] = useCountdown(targetDate);
+const CountdownTimer = ({ endDate, enable }) => {
+  const [minutes, seconds] = useCountdown(endDate, enable);
 
   if (minutes + seconds <= 0) {
     return (
@@ -42,9 +44,9 @@ const CountdownTimer = ({ targetDate }) => {
 };
 
 
-function GameState({ state, enable }) {
+function GameState({ state, show, enable }) {
 
-	if (!enable) {
+	if (!show) {
 		return null;
 	}
 
@@ -59,13 +61,38 @@ function GameState({ state, enable }) {
 			</center>
 			<center style={{'fontSize':'xx-large', 'padding': '10px'}}>
 				<span className="material-symbols-outlined"> schedule </span> &nbsp;
-				<CountdownTimer targetDate={new Date(state.endTime)} />
+				<CountdownTimer endDate={new Date(state.endTime)} enable={enable} />
 			</center>
 		</div>
   );
 }
 
-export { GameState }
+function AllPlayers({ state, show, username }) {
+
+	if (!show) {
+		return null;
+	}
+
+  return (
+		<center>
+			<div className="ui_top" style={{'borderBottom': '2px solid rgba(255, 255, 255, 0.3)', 'width':"70%", 'padding':'25px'}}>
+					Up against {state.players.length - 1} other player(s)!
+			</div>
+			<div>
+				<h2>Players</h2>
+				<ul>
+					{state.players.map((player, index) => (
+						player === username ? <li className='you'>{player} - you</li> : <li className='other'>{player}</li>
+					))}
+				</ul>
+				
+			</div>
+		</center>
+  );
+}
+
+
+export { GameState, AllPlayers }
 
 
 

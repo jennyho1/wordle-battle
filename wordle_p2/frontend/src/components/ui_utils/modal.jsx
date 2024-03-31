@@ -26,6 +26,9 @@ class Modal extends React.Component {
 						<span className="close" onClick={this.closeModal}>&times;</span>
 						<h1>You {this.state.result}!</h1>
 						<p>The word to guess was: {this.state.word}</p>
+						<p>0 players have failed before you made it!</p>
+						<p>1 players were faster than you!</p>
+						<p>1 players were still guessing!</p>
 					</div>
 				</div>
 			);
