@@ -9,6 +9,15 @@ function Key({ val, onKeyPress, color }) {
   return (<td onClick={() => onKeyPress(val)} style={{background:color}}>{val}</td>);
 }
 
+function NextGame({ gameState, enable, username, createNewGame }) {
+	if (enable) return null;
+	if (gameState.inprogress && gameState.players.includes(username)){
+		return (<p>Next game will start when all players currently in this game has won/lost.</p> );
+	}
+	return (<button id="play_newgame_button" style={{'background':'red'}} onClick={createNewGame}>JOIN GAME</button> );
+}
+
+
 class Play extends React.Component {
 
 	handleKeyPress = (c) => {
@@ -70,7 +79,7 @@ class Play extends React.Component {
 			<br/>
 			<br/>
 			<center>
-				{!this.props.guiState.enable ? <button id="play_newgame_button" style={{'background':'red'}} onClick={this.props.createNewGame}>NEW GAME</button>: null }
+				<NextGame gameState={this.props.gameState} enable={this.props.guiState.enable} username={this.props.username} createNewGame={this.props.createNewGame}/>
 			</center>
 			<AllPlayers state={this.props.gameState} show={this.props.guiState.show} username={this.props.username}/>
 			<ToastContainer />

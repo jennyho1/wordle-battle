@@ -12,7 +12,7 @@
  **/
 
 const port = 8550; 
-const webSocketPort = 8550+2;
+const webSocketPort = port+2;
 const express = require('express');
 const { WebSocketServer, WebSocket } = require('ws');
 
@@ -28,15 +28,19 @@ var words = ["words"]; // just in case!!
 const gameState = {
 	wordle: null,
 	target: "",
+	startTime: null,
 	endTime: null,
 	timeout: null,
 	won: 0,
 	lost: 0,
 	stillPlaying: 0,
-	players: []
+	players: [],
+	inprogress: false
 };
 
 const duration = 1000*60*5;  // 5 minutes
+// const duration = 1000*20
+const clients = {}; // maps usernames to client connections
 
 /******************************************************************************
  * word routines
@@ -67,7 +71,6 @@ const wss = new WebSocketServer({ port: webSocketPort });
  ******************************************************************************/
 app.get('/api/username/', function (req, res) {
   let username = '';
-
 	if (req.cookies.username){
 		username = req.cookies.username;
 	} else {
@@ -91,9 +94,16 @@ app.put('/api/username/:username/newgame', function (req, res) {
 	database[username].reset();
 
 	// --- multiplayer logic ---
+	if (!gameState.inprogress) {
+		startNewGame();
+	}
+	if (!gameState.players.includes(username)) {
+		gameState.players.push(username);
+	}
 	database[username].setTarget(gameState.target);
 	gameState.stillPlaying++;
-	// broadcastGameState();
+	updateGameState();
+
 	// -------------------------
 
 	res.status(200);
@@ -111,16 +121,17 @@ app.post('/api/username/:username/guess/:guess', function (req, res) {
 		return;
 	}
 	var data = database[username].makeGuess(guess);
-
+	getTimeRemaining();
 	// --- multiplayer logic ---
 	if (data.state == "won") {
 		gameState.won++;
 		gameState.stillPlaying--;
-	} else if (data.state == "won"){
+	} else if (data.state == "lost"){
 		gameState.lost++;
 		gameState.stillPlaying--;
 	}
-	broadcastGameState();
+	updateGameState();
+	data.gameState = JSON.parse(getGameState());
 	// -------------------------
 
 	res.status(200);
@@ -142,13 +153,32 @@ function getGameState(){
 		lost: gameState.lost,
 		stillPlaying: gameState.stillPlaying,
 		endTime: gameState.endTime,
-		players: gameState.players
+		players: gameState.players,
+		inprogress: gameState.inprogress,
+		timeRemaining: getTimeRemaining()
 	});
 	return message;
 }
 
-function broadcastGameState(){
+function updateGameState() {
+	if (gameState.stillPlaying == 0){
+		gameState.inprogress = false;
+	}
+	broadcastGameStateToPlayers();
+}
+
+function broadcastGameStateToPlayers(){
 	let message = getGameState();
+	gameState.players.forEach(function each(player) {	
+		let connection = clients[player];
+		
+		if (connection != null && connection.readyState === WebSocket.OPEN) {
+			connection.send(message);
+		}
+	});
+}
+
+function broadcastMessage(message){
 	wss.clients.forEach(function each(client) {	
 		if (client.readyState === WebSocket.OPEN) {
 			client.send(message);
@@ -157,29 +187,31 @@ function broadcastGameState(){
 }
 
 
+
 wss.on('connection', function(connection) {
 
 	console.log(`A player has connected.`);
 
 	// a single game is created once the first client connection is established
-	// and restarts every 5 minutes
 	if (gameState.wordle == null){
 		gameState.wordle = new Wordle(words);
-		startNewGame();
 	}
 
+	// on client connection, client will send to server their username
 	connection.on('message', function(data) {
 		const username = data.toString();
-		console.log("Player joined: ", username);
 		connection.username = username;
-		gameState.players.push(username);
-		broadcastGameState();
-		// TODO: handle case where the user joins a game that it already joined
+		clients[username] = connection;
 	});
 
 	connection.on('close', function() {
-		console.log('A player has disconnected.');
-		// TODO: update game state if the player was playing
+		// update game state if the player was still playing
+		if (connection.username != null && database[connection.username].getState() == 'play'){
+			gameState.stillPlaying--;
+			const index = gameState.players.indexOf(connection.username);
+			gameState.players.splice(index, 1);
+			updateGameState();
+		}
 	});
 
 });
@@ -194,12 +226,24 @@ wss.on('close', function(code, data) {
  ******************************************************************************/
 
 function startNewGame() {
+	clearTimeout(gameState.timeout);
 	gameState.target = gameState.wordle.getRandomWord();
-	gameState.timeout = setTimeout(startNewGame, duration);
 	gameState.endTime = Date.now() + duration;
 	gameState.won = 0;
 	gameState.lost = 0;
 	gameState.stillPlaying = 0;
 	gameState.players = [];
+	gameState.inprogress = true;
 	console.log("New word: ", gameState.target);
+	gameState.timeout = setTimeout(gameOver, duration);
+}
+
+function gameOver() {
+	gameState.inprogress = false;
+	broadcastGameStateToPlayers();
+}
+
+function getTimeRemaining() {
+	let timeRemaining = gameState.endTime - Date.now();
+	return timeRemaining;
 }

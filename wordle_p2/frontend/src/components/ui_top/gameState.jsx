@@ -62,6 +62,7 @@ function GameState({ state, show, enable }) {
 			<center style={{'fontSize':'xx-large', 'padding': '10px'}}>
 				<span className="material-symbols-outlined"> schedule </span> &nbsp;
 				<CountdownTimer endDate={new Date(state.endTime)} enable={enable} />
+				{/* <CountdownTimer timeRemaining={state.timeRemaining} enable={enable} /> */}
 			</center>
 		</div>
   );

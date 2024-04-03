@@ -47,7 +47,8 @@ class Main extends React.Component {
 			guiState: getInitialGameState(),
 			wins: 0,
 			losses: 0,
-			gameState: {won:0, lost:0, stillPlaying:0, endTime:0, players:[]}
+			played: 0,
+			gameState: {won:0, lost:0, stillPlaying:0, endTime:0, players:[], inprogress:false, timeRemaining: 0}
 		};
 		this.playRef = React.createRef();
 		this.modalRef = React.createRef();
@@ -58,6 +59,9 @@ class Main extends React.Component {
 		api_getUsername((data) => {
 			let username = data.username;
 			this.setState({username: username});
+			if (socket && socket.readyState === WebSocket.OPEN){
+				socket.send(username);
+			}
 		});
 
 		// on web socket connection, send username to server
@@ -68,8 +72,10 @@ class Main extends React.Component {
 		// on receiving message from server, update gameState
 		socket.addEventListener("message", event => {
 			let data = JSON.parse(event.data);
-			// console.log("Message from server ", data)
-			console.log("Players: ", data.players)
+			if (this.state.guiState.enable && !data.inprogress){
+				this.modalRef.current.showModal('timeout', data.target, data);
+				this.setState({guiState: {...this.state.guiState, enable: false}, losses: this.state.losses+1});
+			}
 			this.setState({gameState: data});
 		});
 	
@@ -83,10 +89,8 @@ class Main extends React.Component {
 	createNewGame = () => {
 		api_newgame(this.state.username, (data) => {
 			let gameState = JSON.parse(data.gameState);
-			this.setState({guiState: {...getInitialGameState(), enable: true, show:true}, gameState: gameState})
-			if (socket && socket.readyState === WebSocket.OPEN){
-				socket.send(this.state.username);
-			}
+			gameState.endTime = Date.now() + gameState.timeRemaining;
+			this.setState({guiState: {...getInitialGameState(), enable: true, show:true}, gameState: gameState, played: this.setState.played+1})
 		})
 	}
 
@@ -116,7 +120,7 @@ class Main extends React.Component {
 		if (data.success){
 			this.updateBoard(data.score);
 			if (data.state === 'won' || data.state === 'lost') {
-				this.modalRef.current.showModal(data.state, data.target);
+				this.modalRef.current.showModal(data.state, data.target, data.gameState);
 				let wins = data.state === 'won' ? this.state.wins + 1 : this.state.wins;
 				let losses = data.state === 'lost' ? this.state.losses + 1 : this.state.losses;
 				this.setState({guiState: {...this.state.guiState, enable: false}, wins: wins, losses: losses});
@@ -167,7 +171,7 @@ class Main extends React.Component {
 				/>
 			);
 		} else if (this.state.pagename === "ui_stats") {
-			return <Stats wins={this.state.wins} players={1} losses={this.state.losses}/>;
+			return <Stats wins={this.state.wins} played={this.state.played} losses={this.state.losses} gameState={this.state.gameState}/>;
 		} else if (this.state.pagename === "ui_instructions") {
 			return <Instructions />;
 		} 
