@@ -83,7 +83,7 @@ function AllPlayers({ state, show, username }) {
 				<h2>Players</h2>
 				<ul>
 					{state.players.map((player, index) => (
-						player === username ? <li className='you'>{player} - you</li> : <li className='other'>{player}</li>
+						player === username ? <li className='you' key={index}>{player} - you</li> : <li className='other' key={index}>{player}</li>
 					))}
 				</ul>
 				

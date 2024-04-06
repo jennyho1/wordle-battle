@@ -12,7 +12,7 @@ import { Header } from './ui_top/header'
 import { Modal } from './ui_utils/modal'
 
 
-const getInitialGameState = () => { 
+const getInitialGuiState = () => { 
 	return {
 		enable: false,
 		show: false,
@@ -44,11 +44,11 @@ class Main extends React.Component {
 		this.state = { 
 			pagename: "ui_username",
 			username: "",
-			guiState: getInitialGameState(),
+			guiState: getInitialGuiState(),
 			wins: 0,
 			losses: 0,
 			played: 0,
-			gameState: {won:0, lost:0, stillPlaying:0, endTime:0, players:[], inprogress:false, timeRemaining: 0}
+			gameState: {won:0, lost:0, stillPlaying:0, endTime:0, players:[], inprogress:false, timeRemaining: 0, timesup:false, target:''}
 		};
 		this.playRef = React.createRef();
 		this.modalRef = React.createRef();
@@ -66,21 +66,18 @@ class Main extends React.Component {
 
 		// on web socket connection, send username to server
 		socket.addEventListener("open", event => {
-			console.log('WebSocket connection established');
-			
+			// console.log('WebSocket connection established');
 		});
 		// on receiving message from server, update gameState
 		socket.addEventListener("message", event => {
 			let data = JSON.parse(event.data);
-			if (this.state.guiState.enable && !data.inprogress){
+			if (this.state.guiState.enable && data.timesup){
 				this.modalRef.current.showModal('timeout', data.target, data);
 				this.setState({guiState: {...this.state.guiState, enable: false}, losses: this.state.losses+1});
 			}
 			this.setState({gameState: data});
 		});
-	
 	}
-
 
 	handleSwitchPage = (name) => {
 		this.setState({pagename: name});
@@ -90,7 +87,7 @@ class Main extends React.Component {
 		api_newgame(this.state.username, (data) => {
 			let gameState = JSON.parse(data.gameState);
 			gameState.endTime = Date.now() + gameState.timeRemaining;
-			this.setState({guiState: {...getInitialGameState(), enable: true, show:true}, gameState: gameState, played: this.setState.played+1})
+			this.setState({guiState: {...getInitialGuiState(), enable: true, show:true}, gameState: gameState, played: this.state.played+1})
 		})
 	}
 

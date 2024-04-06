@@ -28,18 +28,17 @@ var words = ["words"]; // just in case!!
 const gameState = {
 	wordle: null,
 	target: "",
-	startTime: null,
 	endTime: null,
 	timeout: null,
 	won: 0,
 	lost: 0,
 	stillPlaying: 0,
 	players: [],
-	inprogress: false
+	inprogress: false,
+	timesup: false
 };
 
 const duration = 1000*60*5;  // 5 minutes
-// const duration = 1000*20
 const clients = {}; // maps usernames to client connections
 
 /******************************************************************************
@@ -103,11 +102,10 @@ app.put('/api/username/:username/newgame', function (req, res) {
 	database[username].setTarget(gameState.target);
 	gameState.stillPlaying++;
 	updateGameState();
-
 	// -------------------------
 
 	res.status(200);
-	res.json({"status":"created", "gameState": getGameState()});
+	res.json({"status":"created", "gameState": getGameState(false)});
 });
 
 // Add another guess against the current secret word
@@ -121,7 +119,7 @@ app.post('/api/username/:username/guess/:guess', function (req, res) {
 		return;
 	}
 	var data = database[username].makeGuess(guess);
-	getTimeRemaining();
+
 	// --- multiplayer logic ---
 	if (data.state == "won") {
 		gameState.won++;
@@ -131,7 +129,7 @@ app.post('/api/username/:username/guess/:guess', function (req, res) {
 		gameState.stillPlaying--;
 	}
 	updateGameState();
-	data.gameState = JSON.parse(getGameState());
+	data.gameState = JSON.parse(getGameState(false));
 	// -------------------------
 
 	res.status(200);
@@ -147,50 +145,43 @@ app.listen(port, function () {
  * Web Socket Server
  ******************************************************************************/
 
-function getGameState(){
-	let message = JSON.stringify({
+function getGameState(includeTarget){
+	let message = {
 		won: gameState.won,
 		lost: gameState.lost,
 		stillPlaying: gameState.stillPlaying,
 		endTime: gameState.endTime,
 		players: gameState.players,
 		inprogress: gameState.inprogress,
-		timeRemaining: getTimeRemaining()
-	});
-	return message;
+		timeRemaining: getTimeRemaining(),
+		timesup: gameState.timesup,
+		target: '',
+	};
+	if (includeTarget){
+		message.target = gameState.target;
+	}
+	return JSON.stringify(message);
 }
 
 function updateGameState() {
 	if (gameState.stillPlaying == 0){
 		gameState.inprogress = false;
 	}
-	broadcastGameStateToPlayers();
+	broadcastGameStateToPlayers(false);
 }
 
-function broadcastGameStateToPlayers(){
-	let message = getGameState();
+function broadcastGameStateToPlayers(includeTarget){
+	let message = getGameState(includeTarget);
 	gameState.players.forEach(function each(player) {	
 		let connection = clients[player];
-		
 		if (connection != null && connection.readyState === WebSocket.OPEN) {
 			connection.send(message);
 		}
 	});
 }
 
-function broadcastMessage(message){
-	wss.clients.forEach(function each(client) {	
-		if (client.readyState === WebSocket.OPEN) {
-			client.send(message);
-		}
-	});
-}
-
-
-
 wss.on('connection', function(connection) {
 
-	console.log(`A player has connected.`);
 
 	// a single game is created once the first client connection is established
 	if (gameState.wordle == null){
@@ -202,11 +193,13 @@ wss.on('connection', function(connection) {
 		const username = data.toString();
 		connection.username = username;
 		clients[username] = connection;
+		// console.log(`${connection.username} has connected.`);
 	});
 
 	connection.on('close', function() {
 		// update game state if the player was still playing
 		if (connection.username != null && database[connection.username].getState() == 'play'){
+			// console.log(`${connection.username} player disconnected`)
 			gameState.stillPlaying--;
 			const index = gameState.players.indexOf(connection.username);
 			gameState.players.splice(index, 1);
@@ -234,13 +227,15 @@ function startNewGame() {
 	gameState.stillPlaying = 0;
 	gameState.players = [];
 	gameState.inprogress = true;
-	console.log("New word: ", gameState.target);
+	gameState.timesup = false;
 	gameState.timeout = setTimeout(gameOver, duration);
+	// console.log("New word: ", gameState.target);
 }
 
 function gameOver() {
 	gameState.inprogress = false;
-	broadcastGameStateToPlayers();
+	gameState.timesup = true;
+	broadcastGameStateToPlayers(true);
 }
 
 function getTimeRemaining() {
