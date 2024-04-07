@@ -66,7 +66,7 @@ class Main extends React.Component {
 
 		// on web socket connection, send username to server
 		socket.addEventListener("open", event => {
-			// console.log('WebSocket connection established');
+			console.log('WebSocket connection established'); // --debug
 		});
 		// on receiving message from server, update gameState
 		socket.addEventListener("message", event => {

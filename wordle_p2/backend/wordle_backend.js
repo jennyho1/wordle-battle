@@ -180,10 +180,11 @@ function broadcastGameStateToPlayers(includeTarget){
 	});
 }
 
-console.log(wss == null)
 console.log(wss)
 
 wss.on('connection', function(connection) {
+
+	console.log("connect")
 
 	// a single game is created once the first client connection is established
 	if (gameState.wordle == null){
