@@ -193,13 +193,13 @@ wss.on('connection', function(connection) {
 		const username = data.toString();
 		connection.username = username;
 		clients[username] = connection;
-		// console.log(`${connection.username} has connected.`);
+		console.log(`${connection.username} has connected.`); // --debug
 	});
 
 	connection.on('close', function() {
 		// update game state if the player was still playing
 		if (connection.username != null && database[connection.username].getState() == 'play'){
-			// console.log(`${connection.username} player disconnected`)
+			console.log(`${connection.username} player disconnected`) // --debug
 			gameState.stillPlaying--;
 			const index = gameState.players.indexOf(connection.username);
 			gameState.players.splice(index, 1);

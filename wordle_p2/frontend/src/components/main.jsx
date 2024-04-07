@@ -76,6 +76,7 @@ class Main extends React.Component {
 				this.setState({guiState: {...this.state.guiState, enable: false}, losses: this.state.losses+1});
 			}
 			this.setState({gameState: data});
+			console.log(data); // --debug
 		});
 	}
 
