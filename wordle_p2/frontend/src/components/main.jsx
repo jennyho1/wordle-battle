@@ -37,7 +37,6 @@ const getInitialGuiState = () => {
 }
 
 const socket = new WebSocket(`ws://${window.location.hostname}:8552`);
-console.log(window.location.hostname) // -- debug
 
 class Main extends React.Component {
   constructor(props) {
@@ -61,6 +60,7 @@ class Main extends React.Component {
 			let username = data.username;
 			this.setState({username: username});
 			if (socket && socket.readyState === WebSocket.OPEN){
+				console.log("here") //-- debug
 				socket.send(username);
 			}
 		});
