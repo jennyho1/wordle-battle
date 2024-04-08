@@ -36,7 +36,8 @@ const getInitialGuiState = () => {
 	}
 }
 
-const socket = new WebSocket(`ws://${window.location.hostname}:8552`);
+const socket = new WebSocket(`ws://localhost:8552`);
+// window.location.hostname
 
 class Main extends React.Component {
   constructor(props) {
